@@ -341,19 +341,21 @@ app.get('/api/stats', requireAuth, (req, res) => {
 
 // ① 개인별 실적
 function getIndividualStats(data) {
-  const workDays = getWorkingDays(data);
   const map = {};
 
   for (const r of data) {
     const name = r.담당자;
     if (!map[name]) map[name] = {
-      담당자: name, 총건수: 0, 평일건수: 0, 장거리: 0,
+      담당자: name, 총건수: 0, 평일건수: 0, 평일날짜: new Set(), 장거리: 0,
       도보: 0, 휠체어: 0, 침대: 0, 이동카: 0,
       kpiArr: [], 업무: {}, 동시건: 0,
     };
     const s = map[name];
     s.총건수++;
-    if (isWorkingDay(r.호출일)) s.평일건수++;
+    if (isWorkingDay(r.호출일)) {
+      s.평일건수++;
+      s.평일날짜.add(r.호출일);
+    }
     if (r.동시건) s.동시건++;
     if (r.장거리) s.장거리++;
     if (r.이동수단 === '도보')   s.도보++;
@@ -377,7 +379,8 @@ function getIndividualStats(data) {
       이동카:       s.이동카,
       업무:         s.업무,
       중간이송시간: median(s.kpiArr),
-      일평균:       +(s.평일건수 / workDays).toFixed(1),
+      일평균:       s.평일날짜.size > 0 ? +(s.평일건수 / s.평일날짜.size).toFixed(1) : 0,
+      근무일수:     s.평일날짜.size,
       동시건:       s.동시건,
     }))
     .sort((a, b) => b.총건수 - a.총건수);
@@ -429,13 +432,14 @@ function getTimingStats(data) {
   }));
 
   // 담당자별: 평일 데이터만 사용, 중앙값 + 평일 일평균
-  const workDays = getWorkingDays(data);
-
-  // 평일 전체 건수 (방사선 포함, 일평균 분모용)
+  // 평일 전체 건수 + 실제 근무일 추적 (방사선 포함, 일평균 분모용)
   const agentTotalMap = {};
+  const agentDaysMap = {}; // 담당자별 실제 근무일 Set
   for (const r of data) {
     if (!isWorkingDay(r.호출일)) continue;
     agentTotalMap[r.담당자] = (agentTotalMap[r.담당자] || 0) + 1;
+    if (!agentDaysMap[r.담당자]) agentDaysMap[r.담당자] = new Set();
+    agentDaysMap[r.담당자].add(r.호출일);
   }
 
   // 평일 KPI 배열 (방사선 제외, 이송시간 중앙값용)
@@ -453,12 +457,13 @@ function getTimingStats(data) {
 
   const agentTiming = [...agentNames].map(name => {
     const 평일건수 = agentTotalMap[name] || 0;
+    const 근무일수 = agentDaysMap[name] ? agentDaysMap[name].size : 0;
     return {
       담당자:       name,
       중간이송시간: median(agentKpiMap[name] || []),
       평일건수,
-      일평균:       +(평일건수 / workDays).toFixed(1),
-      근무일수:     workDays,
+      일평균:       근무일수 > 0 ? +(평일건수 / 근무일수).toFixed(1) : 0,
+      근무일수,
     };
   }).sort((a, b) => b.평일건수 - a.평일건수);
 
