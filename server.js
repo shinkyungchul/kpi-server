@@ -718,6 +718,19 @@ function buildReportWorkbook(data) {
   const wsDetail = XLSX.utils.aoa_to_sheet(detailRows);
   XLSX.utils.book_append_sheet(wb, wsDetail, '지연상세');
 
+  // ── 개인별실적 시트 ──
+  const indivStats = getIndividualStats(data);
+  const indivHeader = [
+    '순위', '담당자', '총건수', '평일 일평균', '장거리',
+    '도보', '휠체어', '침대', '이동카', '동시누름', '이송시간 중앙값(분)',
+  ];
+  const indivRows = [indivHeader, ...indivStats.map((r, i) => [
+    i + 1, r.담당자, r.총건수, r.일평균, r.장거리,
+    r.도보, r.휠체어, r.침대, r.이동카, r.동시건, r.중간이송시간,
+  ])];
+  const wsIndiv = XLSX.utils.aoa_to_sheet(indivRows);
+  XLSX.utils.book_append_sheet(wb, wsIndiv, '개인별실적');
+
   return wb;
 }
 
