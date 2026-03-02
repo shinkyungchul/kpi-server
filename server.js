@@ -255,12 +255,19 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ ok: false, message: '파일이 없습니다.' });
 
   try {
-    const wb = XLSX.readFile(req.file.path);
+    const wb = XLSX.readFile(req.file.path, {
+      cellFormula: false,
+      cellHTML: false,
+      cellNF: false,
+      cellStyles: false,
+      sheetStubs: false,
+    });
     const sheetName = wb.SheetNames.includes('워크시트 익스포트')
       ? '워크시트 익스포트'
       : wb.SheetNames[0];
     const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(ws);
+    const rows = XLSX.utils.sheet_to_json(ws, { raw: true, defval: null });
+    wb.Sheets = {};
 
     cachedData = rows.map(processRow);
     fs.unlink(req.file.path, () => {});
