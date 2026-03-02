@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // ───────────── 계정 설정 ─────────────
 const USERS = {
-  admin: 'kpi1234',
+  admin: process.env.ADMIN_PASSWORD || 'kpi1234',
 };
 
 // ───────────── 출발지/도착지 기준 데이터 로드 ─────────────
@@ -108,7 +108,7 @@ let cachedData = null;
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(session({
-  secret: 'kpi-secret-key-2025',
+  secret: process.env.SESSION_SECRET || 'kpi-secret-key-2025',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 8 * 60 * 60 * 1000 },
