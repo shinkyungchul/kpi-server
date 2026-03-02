@@ -105,8 +105,8 @@ function getWorkingDays(data) {
 let cachedData = null;
 
 // ───────────── 미들웨어 ─────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: false, limit: '100mb' }));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'kpi-secret-key-2025',
   resave: false,
@@ -280,6 +280,24 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
   } catch (e) {
     fs.unlink(req.file.path, () => {});
     res.status(500).json({ ok: false, message: '파일 처리 오류: ' + e.message });
+  }
+});
+
+// ───────────── JSON 업로드 (브라우저에서 파싱된 데이터 수신) ─────────────
+app.post('/upload-json', requireAuth, (req, res) => {
+  try {
+    const { rows } = req.body;
+    if (!rows || !Array.isArray(rows)) return res.status(400).json({ ok: false, message: '데이터가 없습니다.' });
+
+    cachedData = rows.map(processRow);
+
+    res.json({
+      ok: true,
+      count: cachedData.length,
+      dateRange: getDateRange(cachedData),
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: '처리 오류: ' + e.message });
   }
 });
 
