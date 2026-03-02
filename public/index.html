@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>환자이송 KPI - 로그인</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 48px 40px;
+    width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .logo h1 {
+    font-size: 22px;
+    color: #1a3a5c;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .logo p {
+    font-size: 13px;
+    color: #888;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+  input:focus { border-color: #2d6a9f; }
+  button {
+    width: 100%;
+    padding: 13px;
+    background: #1a3a5c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 4px;
+  }
+  button:hover { background: #2d6a9f; }
+  .error {
+    color: #e53935;
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>환자이송 KPI</h1>
+    <p>이송실적 분석 대시보드</p>
+  </div>
+  <label>아이디</label>
+  <input type="text" id="username" placeholder="아이디 입력" autocomplete="username">
+  <label>비밀번호</label>
+  <input type="password" id="password" placeholder="비밀번호 입력" autocomplete="current-password">
+  <button onclick="login()">로그인</button>
+  <p class="error" id="errMsg"></p>
+</div>
+
+<script>
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const err = document.getElementById('errMsg');
+    err.style.display = 'none';
+
+    if (!username || !password) {
+      err.textContent = '아이디와 비밀번호를 입력하세요.';
+      err.style.display = 'block';
+      return;
+    }
+
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      location.href = '/dashboard.html';
+    } else {
+      err.textContent = data.message || '로그인 실패';
+      err.style.display = 'block';
+    }
+  }
+
+  // 이미 로그인된 경우
+  fetch('/api/me').then(r => r.json()).then(d => {
+    if (d.ok) location.href = '/dashboard.html';
+  });
+</script>
+</body>
+</html>
