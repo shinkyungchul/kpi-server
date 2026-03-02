@@ -267,7 +267,7 @@
             <tr>
               <th>순위</th><th>담당자</th><th>총건수</th><th>평일 일평균</th>
               <th>장거리</th><th>도보</th><th>휠체어</th><th>침대</th><th>이동카</th>
-              <th>이송시간 중앙값(분)</th>
+              <th>동시누름</th><th>이송시간 중앙값(분)</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -618,6 +618,7 @@ function renderIndividual() {
       <td>${r.일평균 != null ? r.일평균 : '-'}</td>
       <td>${r.장거리 ? `<span class="badge long">${r.장거리}</span>` : 0}</td>
       <td>${r.도보}</td><td>${r.휠체어}</td><td>${r.침대}</td><td>${r.이동카}</td>
+      <td>${r.동시건 || 0}</td>
       <td>${r.중간이송시간 != null ? r.중간이송시간 : '-'}</td>
     </tr>
   `).join('');
@@ -913,7 +914,7 @@ function renderHourly() {
 // ───── ③ 이송시간 분석 ─────
 function renderTiming() {
   const hourly = statsData.timing?.시간대별 || []; // 6~22시
-  const agentRows = (statsData.timing?.개인별 || []).slice(0, 20);
+  const agentRows = (statsData.timing?.개인별 || []).slice(0, 50);
   const labelsHour = hourly.map(r => `${String(r.시간대).padStart(2,'0')}시`);
 
   // 시간대별 이송시간 중앙값 (선형)

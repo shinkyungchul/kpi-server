@@ -223,6 +223,10 @@ function processRow(r) {
     ? parseInt(String(r['호출시간']).split(':')[0], 10)
     : null;
 
+  // 동시누름: 시작시간~종료시간 3분 이내
+  const 시작종료차 = diffMinutes(r['시작시간'], r['종료시간']);
+  const 동시건 = 시작종료차 !== null && 시작종료차 <= 3;
+
   return {
     호출일:       r['호출일'] || '',
     환자번호:     objno,
@@ -247,6 +251,7 @@ function processRow(r) {
     이송kpi,
     호출시간대:   callHour,
     지연시간:     r['지연시간'] || 0,
+    동시건,
   };
 }
 
@@ -342,12 +347,14 @@ function getIndividualStats(data) {
   for (const r of data) {
     const name = r.담당자;
     if (!map[name]) map[name] = {
-      담당자: name, 총건수: 0, 장거리: 0,
+      담당자: name, 총건수: 0, 평일건수: 0, 장거리: 0,
       도보: 0, 휠체어: 0, 침대: 0, 이동카: 0,
-      kpiArr: [], 업무: {},
+      kpiArr: [], 업무: {}, 동시건: 0,
     };
     const s = map[name];
     s.총건수++;
+    if (isWorkingDay(r.호출일)) s.평일건수++;
+    if (r.동시건) s.동시건++;
     if (r.장거리) s.장거리++;
     if (r.이동수단 === '도보')   s.도보++;
     else if (r.이동수단 === '휠체어') s.휠체어++;
@@ -370,7 +377,8 @@ function getIndividualStats(data) {
       이동카:       s.이동카,
       업무:         s.업무,
       중간이송시간: median(s.kpiArr),
-      일평균:       +(s.총건수 / workDays).toFixed(1),
+      일평균:       +(s.평일건수 / workDays).toFixed(1),
+      동시건:       s.동시건,
     }))
     .sort((a, b) => b.총건수 - a.총건수);
 }
