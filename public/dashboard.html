@@ -976,7 +976,7 @@ function renderTiming() {
 
   // 테이블
   const tbody = document.querySelector('#tblTiming tbody');
-  tbody.innerHTML = (statsData.timing?.개인별 || []).map((r, i) => `
+  tbody.innerHTML = (statsData.timing?.개인별 || []).slice(0, 50).map((r, i) => `
     <tr>
       <td>${i+1}</td>
       <td><strong>${r.담당자}</strong></td>
